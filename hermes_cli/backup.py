@@ -64,6 +64,11 @@ _EXCLUDED_NAMES = {
 # zipfile.open() drops Unix mode bits on extract; restore tightens these to 0600.
 _SECRET_FILE_NAMES = {".env", "auth.json", "state.db"}
 
+# Secrets must NEVER be written into a backup archive (Phase 0 hardening).
+# state.db is intentionally absent: it is legitimate state we DO want backed up.
+# Re-add .env / auth.json by hand after `hermes import`.
+_EXCLUDED_SECRET_NAMES = {".env", "auth.json"}
+
 
 def _should_exclude(rel_path: Path) -> bool:
     """Return True if *rel_path* (relative to hermes root) should be skipped."""
@@ -77,6 +82,9 @@ def _should_exclude(rel_path: Path) -> bool:
     name = rel_path.name
 
     if name in _EXCLUDED_NAMES:
+        return True
+
+    if name in _EXCLUDED_SECRET_NAMES:
         return True
 
     if name.endswith(_EXCLUDED_SUFFIXES):
